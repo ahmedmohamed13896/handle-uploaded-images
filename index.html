@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- jQuery library -->
+  <script src="jquery.min.js"></script>
+
+  <title>handle uploaded images of input file</title>
+  <style>
+    img {
+      max-width: 100%;
+    }
+  </style>
+
+</head>
+
+<body>
+  <input id="files" type="file" multiple accept="image/*,.pdf">
+
+  <div class="items-container" style="width: 200px;">
+  </div>
+
+</body>
+
+
+
+<script>
+
+  /**
+ * @params {File[]} files Array of files to add to the FileList
+ * @return {FileList}
+ */
+
+  // to update the input file value when change selected images or remove them from the dom
+  function FileListItems(files) {
+    var b = new ClipboardEvent("").clipboardData || new DataTransfer()
+    for (var i = 0, len = files.length; i < len; i++) b.items.add(files[i])
+    return b.files
+  }
+
+
+  let files = document.querySelector('#files');
+  let itemsContainer = $('.items-container');
+
+  // uploaded file
+  function uploadFile(event) {
+    let str = event.target.result;
+    let img = document.createElement('img');
+    img.src = str;
+    // itemsContainer.append(img);
+    console.log(event.target);
+  }
+
+
+  // render images 
+  function renderImages(oldFiles) {
+    $('.items-container').find('.img').remove();
+    oldFiles.map((file, index) => {
+      // Create a new FileReader() object
+      let reader = new FileReader();
+      // Setup the callback event to run when the file is read
+      reader.onload = function (e) {
+        let str = event.target.result;
+        let imgContainer = `<div class="img" data-imgid="${index}">
+         <img src="${str}" />
+          <button class="delete"> delete </button> 
+        </div>`;
+        itemsContainer.append(imgContainer);
+      };
+      // Read the file
+      reader.readAsDataURL(files.files[index]);
+    })
+  }
+
+
+
+
+
+  // file upload
+  var oldFiles = [];
+
+  $('#files').on('input', function (e) {
+
+
+    // if uploaded file type is Image
+    if (e.target.files[0].type.includes('image')) {
+      let currentFiles = [];
+      for (let i of e.target.files) {
+        currentFiles.push(i);
+      }
+      oldFiles = [...oldFiles, ...currentFiles];
+      console.log('current files= ', currentFiles);
+      console.log('old files before duplicate= ', oldFiles);
+      let keys = ['name', 'lastModified'];
+
+      // filter dublicated objects
+      oldFiles = oldFiles.filter(
+        (file => o =>
+          (k => !file.has(k) && file.add(k))
+            (keys.map(k => o[k]).join('|'))
+        )
+          (new Set)
+      );
+
+      console.log('old files after remove duplicate= ', oldFiles);
+
+      e.target.files = new FileListItems(oldFiles)
+      console.log(e.target.files);
+
+      if (!e.target.value.length) return;
+
+      renderImages(oldFiles);
+    }
+
+    // if uploaded file is pdf
+
+    if (e.target.files[0].type == "application/pdf") {
+      console.log(e.target.files[0].type);
+      // add pdf2image function here 
+    }
+
+
+  })
+
+
+  // handle delete 
+  $(document).on('click', '.delete', function () {
+    let imgID = $(this).find('img').attr('data-imgid');
+    oldFiles.splice(imgID, 1);
+    $(this).closest('.img').remove();
+
+    // update the input file value
+    document.getElementById('files').files = new FileListItems(oldFiles)
+    console.log(document.getElementById('files').files);
+
+  })
+
+
+</script>
+
+</html>
